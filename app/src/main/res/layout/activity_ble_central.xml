@@ -10,7 +10,7 @@
 
     <TextView
         android:id="@+id/textViewName"
-        android:layout_width="368dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="TextView"
         app:layout_constraintTop_toTopOf="parent"
@@ -18,8 +18,7 @@
         android:layout_marginLeft="8dp"
         app:layout_constraintLeft_toLeftOf="parent"
         android:layout_marginStart="8dp"
-        style="?android:attr/textAppearanceLarge"
-        android:gravity="center_horizontal"/>
+        style="?android:attr/textAppearanceSmall"/>
 
     <ListView
         android:id="@+id/listView"

@@ -12,7 +12,6 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
-import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
@@ -26,9 +25,9 @@ import rocks.keyless.app.android.bleclient.Constants;
 
 public class BleAdapterService extends Service {
 
-    private BluetoothAdapter bluetooth_adapter;
-    private BluetoothGatt bluetooth_gatt;
-    private BluetoothManager bluetooth_manager;
+    private BluetoothAdapter bluetoothAdapter;
+    private BluetoothGatt bluetoothGatt;
+    private BluetoothManager bluetoothManager;
     private Handler activity_handler = null;
     private BluetoothDevice device;
     private BluetoothGattDescriptor descriptor;
@@ -57,7 +56,7 @@ public class BleAdapterService extends Service {
     public static final String PARCEL_RSSI = "RSSI";
     public static final String PARCEL_TEXT = "TEXT";
 
-   /* // service uuids
+    // service uuids
     public static String IMMEDIATE_ALERT_SERVICE_UUID = "00001802-0000-1000-8000-00805F9B34FB";
     public static String LINK_LOSS_SERVICE_UUID       = "00001803-0000-1000-8000-00805F9B34FB";
     public static String TX_POWER_SERVICE_UUID       = "00001804-0000-1000-8000-00805F9B34FB";
@@ -65,7 +64,7 @@ public class BleAdapterService extends Service {
 
     // service characteristics
     public static String ALERT_LEVEL_CHARACTERISTIC       = "00002A06-0000-1000-8000-00805F9B34FB";
-    public static String CLIENT_PROXIMITY_CHARACTERISTIC = "3E099911-293F-11E4-93BD-AFD0FE6D1DFD";*/
+    public static String CLIENT_PROXIMITY_CHARACTERISTIC = "3E099911-293F-11E4-93BD-AFD0FE6D1DFD";
 
 
     public class LocalBinder extends Binder {
@@ -99,14 +98,14 @@ public class BleAdapterService extends Service {
 
     @Override
     public void onCreate() {
-        if (bluetooth_manager == null) {
-            bluetooth_manager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-            if (bluetooth_manager == null) {
+        if (bluetoothManager == null) {
+            bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+            if (bluetoothManager == null) {
                 return;
             }
         }
-        bluetooth_adapter = bluetooth_manager.getAdapter();
-        if (bluetooth_adapter == null) {
+        bluetoothAdapter = bluetoothManager.getAdapter();
+        if (bluetoothAdapter == null) {
             return;
         }
     }
@@ -114,63 +113,63 @@ public class BleAdapterService extends Service {
     // connect to the device
     public boolean connect(final String address) {
 
-        if (bluetooth_adapter == null || address == null) {
-            sendConsoleMessage("connect: bluetooth_adapter=null");
+        if (bluetoothAdapter == null || address == null) {
+            sendConsoleMessage("connect: bluetoothAdapter=null");
             return false;
         }
 
-        device = bluetooth_adapter.getRemoteDevice(address);
+        device = bluetoothAdapter.getRemoteDevice(address);
         if (device == null) {
             sendConsoleMessage("connect: device=null");
             return false;
         }
 
-        bluetooth_gatt = device.connectGatt(this, false, gatt_callback);
+        bluetoothGatt = device.connectGatt(this, false, gatt_callback);
         return true;
     }
 
     // disconnect from device
     public void disconnect() {
         sendConsoleMessage("disconnecting");
-        if (bluetooth_adapter == null || bluetooth_gatt == null) {
-            sendConsoleMessage("disconnect: bluetooth_adapter|bluetooth_gatt null");
+        if (bluetoothAdapter == null || bluetoothGatt == null) {
+            sendConsoleMessage("disconnect: bluetoothAdapter|bluetoothGatt null");
             return;
         }
-        if (bluetooth_gatt != null) {
-            bluetooth_gatt.disconnect();
+        if (bluetoothGatt != null) {
+            bluetoothGatt.disconnect();
         }
     }
 
     public void readRemoteRssi() {
-        if (bluetooth_adapter == null || bluetooth_gatt == null) {
+        if (bluetoothAdapter == null || bluetoothGatt == null) {
             return;
         }
-        bluetooth_gatt.readRemoteRssi();
+        bluetoothGatt.readRemoteRssi();
     }
 
     public void discoverServices() {
-        if (bluetooth_adapter == null || bluetooth_gatt == null) {
+        if (bluetoothAdapter == null || bluetoothGatt == null) {
             return;
         }
         Log.d(Constants.TAG,"Discovering GATT services");
-        bluetooth_gatt.discoverServices();
+        bluetoothGatt.discoverServices();
     }
 
     public List<BluetoothGattService> getSupportedGattServices() {
-        if (bluetooth_gatt == null)
+        if (bluetoothGatt == null)
             return null;
-        return bluetooth_gatt.getServices();
+        return bluetoothGatt.getServices();
     }
 
     public boolean readCharacteristic(String serviceUuid,
                                       String characteristicUuid) {
         Log.d(Constants.TAG,"readCharacteristic:"+characteristicUuid+" of " +serviceUuid);
-        if (bluetooth_adapter == null || bluetooth_gatt == null) {
-            sendConsoleMessage("readCharacteristic: bluetooth_adapter|bluetooth_gatt null");
+        if (bluetoothAdapter == null || bluetoothGatt == null) {
+            sendConsoleMessage("readCharacteristic: bluetoothAdapter|bluetoothGatt null");
             return false;
         }
 
-        BluetoothGattService gattService = bluetooth_gatt
+        BluetoothGattService gattService = bluetoothGatt
                 .getService(java.util.UUID.fromString(serviceUuid));
         if (gattService == null) {
             sendConsoleMessage("readCharacteristic: gattService null");
@@ -182,19 +181,19 @@ public class BleAdapterService extends Service {
             sendConsoleMessage("readCharacteristic: gattChar null");
             return false;
         }
-        return bluetooth_gatt.readCharacteristic(gattChar);
+        return bluetoothGatt.readCharacteristic(gattChar);
     }
 
     public boolean writeCharacteristic(String serviceUuid,
                                        String characteristicUuid, byte[] value) {
 
         Log.d(Constants.TAG,"writeCharacteristic:"+characteristicUuid+" of " +serviceUuid);
-        if (bluetooth_adapter == null || bluetooth_gatt == null) {
-            sendConsoleMessage("writeCharacteristic: bluetooth_adapter|bluetooth_gatt null");
+        if (bluetoothAdapter == null || bluetoothGatt == null) {
+            sendConsoleMessage("writeCharacteristic: bluetoothAdapter|bluetoothGatt null");
             return false;
         }
 
-        BluetoothGattService gattService = bluetooth_gatt
+        BluetoothGattService gattService = bluetoothGatt
                 .getService(java.util.UUID.fromString(serviceUuid));
         if (gattService == null) {
             sendConsoleMessage("writeCharacteristic: gattService null");
@@ -208,7 +207,7 @@ public class BleAdapterService extends Service {
         }
         gattChar.setValue(value);
 
-        return bluetooth_gatt.writeCharacteristic(gattChar);
+        return bluetoothGatt.writeCharacteristic(gattChar);
 
     }
 
@@ -228,11 +227,11 @@ public class BleAdapterService extends Service {
                 Log.d(Constants.TAG, "onConnectionStateChange: DISCONNECTED");
                 Message msg = Message.obtain(activity_handler, GATT_DISCONNECT);
                 msg.sendToTarget();
-                if (bluetooth_gatt != null) {
+                if (bluetoothGatt != null) {
                     Log.d(Constants.TAG,"Closing and destroying BluetoothGatt object");
                     connected = false;
-                    bluetooth_gatt.close();
-                    bluetooth_gatt = null;
+                    bluetoothGatt.close();
+                    bluetoothGatt = null;
                 }
             }
         }

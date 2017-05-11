@@ -45,12 +45,33 @@ public class BleCentralActivity extends AppCompatActivity {
         }
     };
 
-    private Handler serviceHandler = new Handler(new Handler.Callback() {
+    private Handler serviceHandler = new Handler(){
         @Override
-        public boolean handleMessage(Message msg) {
-            return false;
+        public void handleMessage(Message msg) {
+            Bundle bundle;
+            String service_uuid = "";
+            String characteristic_uuid = "";
+            byte[] b = null;
+
+            switch (msg.what) {
+                case BleAdapterService.MESSAGE:
+                    bundle = msg.getData();
+                    String text = bundle.getString(BleAdapterService.PARCEL_TEXT);
+                    showMsg(text);
+                    break;
+            }
         }
-    });
+    };
+
+    private void showMsg(final String msg) {
+        Log.d(Constants.TAG, msg);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                textViewName.setText(msg);
+            }
+        });
+    }
 
 
     @Override
@@ -65,7 +86,7 @@ public class BleCentralActivity extends AppCompatActivity {
 
         initView();
 
-        textViewName.setText(deviceName+"("+deviceAddress+")");
+        setTitle(deviceName+"("+deviceAddress+")");
 
         // connect to the Bluetooth adapter service
         Intent gattServiceIntent = new Intent(this, BleAdapterService.class);
