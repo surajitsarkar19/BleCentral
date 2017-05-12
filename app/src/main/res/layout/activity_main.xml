@@ -17,7 +17,8 @@
         android:textSize="20dp"
         android:paddingBottom="10dp"
         android:textColor="@color/colorPrimaryDark"
-        android:text="Bluetooth Developer Starter Kit" />
+        android:text="Bluetooth Developer Starter Kit"
+        android:visibility="gone"/>
 
     <ListView
         android:id="@+id/deviceList"

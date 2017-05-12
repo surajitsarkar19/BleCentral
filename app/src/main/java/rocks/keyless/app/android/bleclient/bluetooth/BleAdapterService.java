@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
@@ -19,6 +20,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 
+import java.lang.reflect.Method;
 import java.util.List;
 
 import rocks.keyless.app.android.bleclient.Constants;
@@ -161,6 +163,14 @@ public class BleAdapterService extends Service {
         return bluetoothGatt.getServices();
     }
 
+    public List<BluetoothGattCharacteristic> getCharacteristicsForService(BluetoothGattService service){
+        List<BluetoothGattCharacteristic> chars = null;
+        if(service!=null) {
+            chars = service.getCharacteristics();
+        }
+        return chars;
+    }
+
     public boolean readCharacteristic(String serviceUuid,
                                       String characteristicUuid) {
         Log.d(Constants.TAG,"readCharacteristic:"+characteristicUuid+" of " +serviceUuid);
@@ -242,8 +252,7 @@ public class BleAdapterService extends Service {
                 sendConsoleMessage("RSSI read OK");
                 Bundle bundle = new Bundle();
                 bundle.putInt(PARCEL_RSSI, rssi);
-                Message msg = Message
-                        .obtain(activity_handler, GATT_REMOTE_RSSI);
+                Message msg = Message.obtain(activity_handler, GATT_REMOTE_RSSI);
                 msg.setData(bundle);
                 msg.sendToTarget();
             } else {
@@ -263,12 +272,10 @@ public class BleAdapterService extends Service {
                                          BluetoothGattCharacteristic characteristic, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 Bundle bundle = new Bundle();
-                bundle.putString(PARCEL_CHARACTERISTIC_UUID, characteristic.getUuid()
-                        .toString());
+                bundle.putString(PARCEL_CHARACTERISTIC_UUID, characteristic.getUuid().toString());
                 bundle.putString(PARCEL_SERVICE_UUID, characteristic.getService().getUuid().toString());
                 bundle.putByteArray(PARCEL_VALUE, characteristic.getValue());
-                Message msg = Message.obtain(activity_handler,
-                        GATT_CHARACTERISTIC_READ);
+                Message msg = Message.obtain(activity_handler, GATT_CHARACTERISTIC_READ);
                 msg.setData(bundle);
                 msg.sendToTarget();
             } else {
@@ -277,6 +284,7 @@ public class BleAdapterService extends Service {
             }
         }
 
+        @Override
         public void onCharacteristicWrite(BluetoothGatt gatt,
                                           BluetoothGattCharacteristic characteristic, int status) {
             Log.d(Constants.TAG, "onCharacteristicWrite");
@@ -293,5 +301,42 @@ public class BleAdapterService extends Service {
             }
         }
     };
+
+    /*private final BroadcastReceiver mPairingRequestRecevier = new BroadcastReceiver()
+    {
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            if (BluetoothDevice.ACTION_PAIRING_REQUEST.equals(intent.getAction()))
+            {
+                final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                int type = intent.getIntExtra(BluetoothDevice.EXTRA_PAIRING_VARIANT, BluetoothDevice.ERROR);
+
+                if (type == BluetoothDevice.PAIRING_VARIANT_PIN)
+                {
+                    device.setPin(Util.IntToPasskey(pinCode()));
+                    abortBroadcast();
+                }
+                else
+                {
+                    sendConsoleMessage("Unexpected pairing type: " + type);
+                }
+            }
+        }
+    };*/
+
+    /*public static void deleteBondInformation(BluetoothDevice device)
+    {
+        try
+        {
+            // FFS Google, just unhide the method.
+            Method m = device.getClass().getMethod("removeBond", (Class[]) null);
+            m.invoke(device, (Object[]) null);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }*/
 
 }

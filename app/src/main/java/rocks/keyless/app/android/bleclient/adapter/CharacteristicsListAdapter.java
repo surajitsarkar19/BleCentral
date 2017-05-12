@@ -1,6 +1,5 @@
 package rocks.keyless.app.android.bleclient.adapter;
 
-import android.app.Activity;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +8,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import rocks.keyless.app.android.bleclient.R;
@@ -16,12 +16,10 @@ import rocks.keyless.app.android.bleclient.bluetooth.BleNamesResolver;
 
 public class CharacteristicsListAdapter extends BaseAdapter {
     	private ArrayList<BluetoothGattCharacteristic> mCharacteristics;
-    	private LayoutInflater mInflater;
     	
-    	public CharacteristicsListAdapter(Activity parent) {
+    	public CharacteristicsListAdapter() {
     		super();
-    		mCharacteristics  = new ArrayList<BluetoothGattCharacteristic>();
-    		mInflater = parent.getLayoutInflater();
+    		mCharacteristics  = new ArrayList<>();
     	}
     	
     	public void addCharacteristic(BluetoothGattCharacteristic ch) {
@@ -29,6 +27,19 @@ public class CharacteristicsListAdapter extends BaseAdapter {
     			mCharacteristics.add(ch);
     		}
     	}
+
+		public void addCharacteristic(List<BluetoothGattCharacteristic> services) {
+            if(services!=null && services.size()<=0)
+                return;
+			for(BluetoothGattCharacteristic service : services){
+				addCharacteristic(service);
+			}
+		}
+
+		public void clear(){
+			mCharacteristics.clear();
+			notifyDataSetChanged();
+		}
     	
     	public BluetoothGattCharacteristic getCharacteristic(int index) {
     		return mCharacteristics.get(index);
@@ -58,7 +69,7 @@ public class CharacteristicsListAdapter extends BaseAdapter {
 			// get already available view or create new if necessary
 			FieldReferences fields;
             if (convertView == null) {
-            	convertView = mInflater.inflate(R.layout.peripheral_list_characteristic_item, null);
+            	convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.peripheral_list_characteristic_item, null);
             	fields = new FieldReferences();
             	fields.charName = (TextView)convertView.findViewById(R.id.peripheral_list_characteristic_name);
             	fields.charUuid = (TextView)convertView.findViewById(R.id.peripheral_list_characteristic_uuid);

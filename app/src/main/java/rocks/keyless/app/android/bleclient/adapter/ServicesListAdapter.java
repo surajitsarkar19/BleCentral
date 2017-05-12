@@ -9,6 +9,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import rocks.keyless.app.android.bleclient.R;
@@ -17,19 +18,32 @@ import rocks.keyless.app.android.bleclient.bluetooth.BleNamesResolver;
 /* display all services for particular device */
 public class ServicesListAdapter extends BaseAdapter {
 	private ArrayList<BluetoothGattService> mBTServices;
-	private LayoutInflater mInflater;
 	
-	public ServicesListAdapter(Activity parent) {
+	public ServicesListAdapter() {
 		super();
-		mBTServices  = new ArrayList<BluetoothGattService>();
-		mInflater = parent.getLayoutInflater();
+		mBTServices  = new ArrayList<>();
 	}
 	
 	public void addService(BluetoothGattService service) {
-		if(mBTServices.contains(service) == false) {
+        if(service == null)
+            return;
+		if(!mBTServices.contains(service)) {
 			mBTServices.add(service);
 		}
 	}
+
+	public void addService(List<BluetoothGattService> services) {
+        if(services!=null && services.size()<=0)
+            return;
+		for(BluetoothGattService service : services){
+            addService(service);
+        }
+	}
+
+	public void clear(){
+        mBTServices.clear();
+        notifyDataSetChanged();
+    }
 	
 	public BluetoothGattService getService(int index) {
 		return mBTServices.get(index);
@@ -59,7 +73,7 @@ public class ServicesListAdapter extends BaseAdapter {
 		// get already available view or create new if necessary
 		FieldReferences fields;
         if (convertView == null) {
-        	convertView = mInflater.inflate(R.layout.peripheral_list_services_item, null);
+        	convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.peripheral_list_services_item, null);
         	fields = new FieldReferences();
         	fields.serviceName = (TextView)convertView.findViewById(R.id.peripheral_list_services_name);
         	fields.serviceUuid = (TextView)convertView.findViewById(R.id.peripheral_list_services_uuid);
