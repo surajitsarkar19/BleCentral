@@ -33,6 +33,7 @@ import rocks.keyless.app.android.bleclient.R;
 import rocks.keyless.app.android.bleclient.adapter.CharacteristicsListAdapter;
 import rocks.keyless.app.android.bleclient.adapter.ServicesListAdapter;
 import rocks.keyless.app.android.bleclient.bluetooth.BleAdapterService;
+import rocks.keyless.app.android.bleclient.bluetooth.BondingBroadcastReceiver;
 
 public class BleCentralActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
 
@@ -55,6 +56,8 @@ public class BleCentralActivity extends AppCompatActivity implements View.OnClic
     enum BleMode{SERVICE_CONNECTION,SERVICE_DISCOVERY,CHARACTERISTCS_DISCOVERY};
 
     private BleMode blemode;
+
+    private BroadcastReceiver mPairingRequestRecevier = new BondingBroadcastReceiver();
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
 
@@ -157,16 +160,16 @@ public class BleCentralActivity extends AppCompatActivity implements View.OnClic
 
         // connect to the Bluetooth adapter service
         Intent gattServiceIntent = new Intent(this, BleAdapterService.class);
-        //bindService(gattServiceIntent, serviceConnection, BIND_AUTO_CREATE);
+        bindService(gattServiceIntent, serviceConnection, BIND_AUTO_CREATE);
 
         // Actually set it in response to ACTION_PAIRING_REQUEST.
         IntentFilter pairingRequestFilter = new IntentFilter();
         pairingRequestFilter.addAction(BluetoothDevice.ACTION_PAIRING_REQUEST);
         pairingRequestFilter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
         pairingRequestFilter.setPriority(IntentFilter.SYSTEM_HIGH_PRIORITY - 1);
-        getApplicationContext().registerReceiver(mPairingRequestRecevier, pairingRequestFilter);
+        //getApplicationContext().registerReceiver(mPairingRequestRecevier, pairingRequestFilter);
 
-        pairDevice(deviceAddress,123456);
+        //pairDevice(deviceAddress,123456);
     }
 
     private void pairDevice(String address, int pin){
@@ -203,8 +206,10 @@ public class BleCentralActivity extends AppCompatActivity implements View.OnClic
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unbindService(serviceConnection);
-        bleService = null;
+        if(bleService!=null) {
+            unbindService(serviceConnection);
+            bleService = null;
+        }
     }
 
     private void disconnect(){
@@ -233,7 +238,7 @@ public class BleCentralActivity extends AppCompatActivity implements View.OnClic
 
     public void onBackPressed() {
         Log.d(Constants.TAG, "onBackPressed");
-        if (bleService.isConnected()) {
+        if (bleService!=null && bleService.isConnected()) {
             if(blemode == BleMode.CHARACTERISTCS_DISCOVERY){
                 blemode = BleMode.SERVICE_DISCOVERY;
                 setAdapter();
@@ -241,7 +246,7 @@ public class BleCentralActivity extends AppCompatActivity implements View.OnClic
                 disconnect();
             }
         } else {
-            unregisterReceiver(mPairingRequestRecevier);
+            //unregisterReceiver(mPairingRequestRecevier);
             finish();
         }
     }
@@ -269,52 +274,5 @@ public class BleCentralActivity extends AppCompatActivity implements View.OnClic
             setAdapter();
         }
     }
-
-    private final BroadcastReceiver mPairingRequestRecevier = new BroadcastReceiver()
-    {
-        @Override
-        public void onReceive(Context context, Intent intent)
-        {
-            if (BluetoothDevice.ACTION_PAIRING_REQUEST.equals(intent.getAction()))
-            {
-                final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                int type = intent.getIntExtra(BluetoothDevice.EXTRA_PAIRING_VARIANT, BluetoothDevice.ERROR);
-
-                if (type == BluetoothDevice.PAIRING_VARIANT_PIN)
-                {
-                    byte[] pinBytes = getIntToByte(000016);
-                    device.setPin(pinBytes);
-                    abortBroadcast();
-                }
-                else
-                {
-                    showToast("Unexpected pairing type: " + type);
-                }
-            } else if(BluetoothDevice.ACTION_BOND_STATE_CHANGED.equals(intent.getAction())){
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                switch (device.getBondState()) {
-                    case BluetoothDevice.BOND_BONDING:
-                        showToast(device.getName() +" is bonding");
-                        break;
-                    case BluetoothDevice.BOND_BONDED:
-                        showToast(device.getName() +" Bonded...");
-                        break;
-                    case BluetoothDevice.BOND_NONE:
-                        showToast(device.getName() +" Bonding failed...");
-                    default:
-                        break;
-                }
-            }
-        }
-
-        public byte[] getIntToByte(int value){
-            ByteBuffer b = ByteBuffer.allocate(4);
-            //b.order(ByteOrder.BIG_ENDIAN); // optional, the initial order of a byte buffer is always BIG_ENDIAN.
-            b.putInt(value);
-            byte[] result = b.array();
-            return result;
-        }
-    };
-
 
 }

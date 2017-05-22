@@ -8,6 +8,8 @@ import android.widget.Toast;
 
 import java.nio.ByteBuffer;
 
+import rocks.keyless.app.android.bleclient.ui.BleCentralActivity;
+
 /**
  * Created by Surajit Sarkar on 12/5/17.
  * Company : Bitcanny Technologies Pvt. Ltd.
@@ -19,8 +21,7 @@ public class BondingBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent)
     {
-        if (BluetoothDevice.ACTION_PAIRING_REQUEST.equals(intent.getAction()))
-        {
+        if (BluetoothDevice.ACTION_PAIRING_REQUEST.equals(intent.getAction())) {
             final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
             int type = intent.getIntExtra(BluetoothDevice.EXTRA_PAIRING_VARIANT, BluetoothDevice.ERROR);
 
@@ -34,7 +35,25 @@ public class BondingBroadcastReceiver extends BroadcastReceiver {
             {
                 Toast.makeText(context,"Unexpected pairing type: " + type,Toast.LENGTH_SHORT).show();
             }
+        } else if(BluetoothDevice.ACTION_BOND_STATE_CHANGED.equals(intent.getAction())){
+            BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+            switch (device.getBondState()) {
+                case BluetoothDevice.BOND_BONDING:
+                    showToast(context,device.getName() +" is bonding");
+                    break;
+                case BluetoothDevice.BOND_BONDED:
+                    showToast(context,device.getName() +" Bonded...");
+                    break;
+                case BluetoothDevice.BOND_NONE:
+                    showToast(context,device.getName() +" Bonding failed...");
+                default:
+                    break;
+            }
         }
+    }
+
+    private void showToast(Context context,String msg){
+        Toast.makeText(context,msg,Toast.LENGTH_SHORT).show();
     }
 
     public byte[] getIntToByte(int value){

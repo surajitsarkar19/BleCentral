@@ -24,7 +24,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
 import rocks.keyless.app.android.bleclient.Constants;
+import rocks.keyless.app.android.bleclient.EncryptionUtils;
 import rocks.keyless.app.android.bleclient.R;
 import rocks.keyless.app.android.bleclient.adapter.DeviceListAdapter;
 import rocks.keyless.app.android.bleclient.bluetooth.BleScanner;
@@ -43,6 +49,7 @@ public class MainActivity extends AppCompatActivity implements ScanResultsConsum
     private boolean permissions_granted=false;
     private int device_count=0;
     private Toast toast;
+    private static String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,8 +92,26 @@ public class MainActivity extends AppCompatActivity implements ScanResultsConsum
             finish();
         }
 
-
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        String text = "Hello RSA";
+        Log.i(TAG,"Before encryption : "+text);
+        String publicKey = EncryptionUtils.readKey(this,R.raw.publickey);
+        String privateKey = EncryptionUtils.readKey(this,R.raw.privatekey);
+        text = EncryptionUtils.encryptStringRSAPublic(text,publicKey);
+        Log.i(TAG,"Encrypted text : "+text);
+        text = EncryptionUtils.decryptStringRSAPrivate(text,privateKey);
+        Log.i(TAG,"Decrypted text : "+text);
+
+        String dd = "bWKrTPBWPeiGa77iLm9BrJlAFj9cEHHijPi8sL32g1J5fjjM634uxxe4qaBpQEmiPe/BWFaMRAi+ExDHQ59KuewgBhj5qSlhVoDJlDt5s4DVjW0xkpq9oJrACqRLVzZUQb8tNGn04kUdqBFU/PKlZnGHm0CitFI1Fx77MHipEgmfmvi7OtleS40+wNtzAetz0ZTSUYeiK3FNT6yYfux+BdmVKwVF9G2MwCeEofIYdmL+X01/lFSKGhfoSYiILG1e2B8SCJY60F+DuUwHjiNvEzq3Ee9K/WXmJN2ySwyLiPDndrE0ml9UtEAp/FW0fHEd53bwQnMBhhl28ICy7MP+Dw==";
+        text = EncryptionUtils.decryptStringRSAPrivate(dd,privateKey);
+        Log.i(TAG,"Decrypted text : "+text);
+    }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
